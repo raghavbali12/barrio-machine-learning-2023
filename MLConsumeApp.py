@@ -5,6 +5,7 @@ import ssl
 import ClassSession
 import csv
 import config  # import the config module
+import pandas as pd
 
 def allowSelfSignedHttps(allowed):
     # bypass the server certificate verification on client side
@@ -14,10 +15,10 @@ def allowSelfSignedHttps(allowed):
 allowSelfSignedHttps(True) # this line is needed if you use self-signed certificate in your scoring service.
 
 # Open and read the csv and parse its contents
-with open('Barrio Class Data 2023 - Machine Learning Data.csv', newline='') as csvFile:
-    reader = csv.reader(csvFile, delimiter=',', quotechar='|')
-    for row in reader:
-        print(row)
+csvUrl = config.csvUrl
+df = pd.read_csv(csvUrl)
+wrapper = ClassSession.ClassSessionWrapper(df)
+print(wrapper.get_row(0).tolist())
 
 # Request data goes here
 # The example below assumes JSON formatting which may be updated
@@ -26,20 +27,9 @@ with open('Barrio Class Data 2023 - Machine Learning Data.csv', newline='') as c
 # https://docs.microsoft.com/azure/machine-learning/how-to-deploy-advanced-entry-script
 data =  {
   "input_data": {
-    "columns": [
-      "Session Start Time",
-      "Class",
-      "Instructor",
-      "Time",
-      "Day of the Week",
-      "Season",
-      "Date",
-      "Class Type",
-      "Level"
-    ],
+    "columns": wrapper.get_columns(),
     "index": [0],
-    "data": [
-    ]
+    "data": [wrapper.get_row(0).tolist()]
   }
 }
 
