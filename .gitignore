@@ -2,3 +2,4 @@ __pycache__/
 config.py
 *.csv
 barriodance2023ml-0ef76a5777c6.json
+BarrioML/*
