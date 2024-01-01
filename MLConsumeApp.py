@@ -3,11 +3,6 @@ import json
 import os
 import ssl
 import ClassSession
-import csv
-import pandas as pd
-import config # config.py
-import os
-import ssl
 import pandas as pd
 import config # config.py
 import gspread
