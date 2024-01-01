@@ -6,11 +6,18 @@ import ClassSession
 import csv
 import pandas as pd
 import config # config.py
+import os
+import ssl
+import pandas as pd
+import config # config.py
+import gspread
+import gspread_dataframe as gd
+from oauth2client.service_account import ServiceAccountCredentials
 
 def allowSelfSignedHttps(allowed):
-    # bypass the server certificate verification on client side
-    if allowed and not os.environ.get('PYTHONHTTPSVERIFY', '') and getattr(ssl, '_create_unverified_context', None):
-        ssl._create_default_https_context = ssl._create_unverified_context
+  # bypass the server certificate verification on client side
+  if allowed and not os.environ.get('PYTHONHTTPSVERIFY', '') and getattr(ssl, '_create_unverified_context', None):
+    ssl._create_default_https_context = ssl._create_unverified_context
 
 allowSelfSignedHttps(True) # this line is needed if you use self-signed certificate in your scoring service.
 
@@ -49,16 +56,33 @@ for index, row in df.iterrows():
   req = urllib.request.Request(url, body, headers)
 
   try:
-      response = urllib.request.urlopen(req)
+    response = urllib.request.urlopen(req)
 
-      result = response.read()
-      output_str = result.decode('utf-8')  # Decode from bytes to string
-      output_num = float(output_str.strip('[]'))  # Remove brackets and convert to float  
-      print(output_num)
-      
+    result = response.read()
+    output_str = result.decode('utf-8')  # Decode from bytes to string
+    output_num = float(output_str.strip('[]'))  # Remove brackets and convert to float 
+    df.loc[index, 'Predicted Number of Students'] = output_num
+
+    # Write the updated dataframe to google sheets
+    scope = ['https://spreadsheets.google.com/feeds',
+        'https://www.googleapis.com/auth/drive']
+
+    credentials = ServiceAccountCredentials.from_json_keyfile_name('barriodance2023ml-0ef76a5777c6.json', scope)
+
+    gc = gspread.authorize(credentials)
+
+    # Open the Google Spreadsheet
+    spreadsheet = gc.open('Barrio Class Data 2023')
+
+    # Select a worksheet from the spreadsheet
+    worksheet = spreadsheet.worksheet('Machine Learning Predictions 2024')
+
+    # Write the DataFrame to the worksheet
+    gd.set_with_dataframe(worksheet, df)
+
   except urllib.error.HTTPError as error:
-      print("The request failed with status code: " + str(error.code))
+    print("The request failed with status code: " + str(error.code))
 
-      # Print the headers - they include the requert ID and the timestamp, which are useful for debugging the failure
-      print(error.info())
-      print(error.read().decode("utf8", 'ignore'))
+    # Print the headers - they include the requert ID and the timestamp, which are useful for debugging the failure
+    print(error.info())
+    print(error.read().decode("utf8", 'ignore'))
