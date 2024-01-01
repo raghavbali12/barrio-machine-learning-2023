@@ -60,7 +60,7 @@ for index, row in df.iterrows():
 
     result = response.read()
     output_str = result.decode('utf-8')  # Decode from bytes to string
-    output_num = float(output_str.strip('[]'))  # Remove brackets and convert to float 
+    output_num = round(float(output_str.strip('[]')), 1)  # Remove brackets and convert to float 
     df.loc[index, 'Predicted Number of Students'] = output_num
 
     # Write the updated dataframe to google sheets
